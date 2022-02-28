@@ -46,6 +46,4 @@ sequenceDiagram
     deactivate GitHub actions
 ```
 
-_Note_: THe blue part is proposed and not actually integrated yet.
-
 Teststring for commit

@@ -7,27 +7,36 @@
   jobs:
     label-pr:
       name: Label PR
-      if: github.event.sender.login != github.event.issue.user.login && contains(github.event.issue.labels.*.name, 'review-requested') && ${{ github.event.issue.pull_request }} && !contains(github.event.issue.labels.*.name, 'Awaiting author contribution')
+      if: >
+        github.event.issue.pull_request
+        && (github.event.sender.login != github.event.issue.user.login)
+        && contains(github.event.issue.labels.*.name, 'review-requested')
+        && !contains(github.event.issue.labels.*.name, 'Awaiting author contribution')
       runs-on: ubuntu-latest
       steps:
         - name: author-commented
           uses: actions/github-script@v6
           with:
+            debug: true
             script: |
+              // FIXME: Requesting team membership requires authentication/pemissions
+              var reviewer_is_staged_recipes_member = true;
               github.rest.teams.getMembershipForUserInOrg({
-                  org: 'conda-forge,
+                  org: 'conda-forge',
                   team_slug: 'staged-recipes',
-                  username: github.event.sender.login
+                  username: '${{ github.event.sender.login }}'
               });
-              github.rest.issues.removeLabel({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  labels: ['review-requested']
-              });
-              github.rest.issues.addLabels({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  labels: [label, 'Awaiting author contribution']
-              })
+              if (reviewer_is_staged_recipes_member) {
+                github.rest.issues.removeLabel({
+                    issue_number: context.issue.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: ['review-requested']
+                });
+                github.rest.issues.addLabels({
+                    issue_number: context.issue.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    labels: ['Awaiting author contribution']
+                });
+              }
