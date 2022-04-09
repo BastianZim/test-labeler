@@ -86,18 +86,20 @@
           id: check_team_review
           uses: actions/github-script@v6
           with:
+            # github-token: ${{ secrets.GH_TOKEN }}
             debug: true
+              # const membership = github.rest.teams.getMembershipForUserInOrg({
+              #     org: 'conda-forge',
+              #     team_slug: 'staged-recipes',
+              #     username: context.payload.sender.login,
+              # });
+              # return membership.then((result) => {
+              #   console.log(result);
+              #   return result.data.state == 'active';
+              # });
             script: |
               console.log(`Label was removed by ${context.payload.sender.login}`);
-              const membership = github.rest.teams.getMembershipForUserInOrg({
-                  org: 'conda-forge',
-                  team_slug: 'staged-recipes',
-                  username: context.payload.sender.login,
-              });
-              return membership.then((value) => {
-                console.log(value);
-                return true;
-              });
+              return true;
         - name: add-labels
           if: >
             (steps.check_team_review.outputs.result == 'true')
