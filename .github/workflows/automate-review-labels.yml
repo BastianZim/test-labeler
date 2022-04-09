@@ -84,9 +84,10 @@
               console.log(context);
 
     check-remove-review-requested-label:
-      name: 'Check that review-requested label was removed by team member'
+      name: 'Check that review-requested label was removed by a team member'
       if: >
         github.event.action == 'unlabeled'
+        && github.event.label.name == 'review-requested'
       runs-on: ubuntu-latest
       steps:
         - name: check-team-membership
@@ -94,7 +95,7 @@
           uses: actions/github-script@v6
           with:
             script: |
-              console.log(context);
+              console.log(`Label was removed by ${context.actor}`);
               // TODO: Check team membership of event sender
               return true;
         - name: add-labels
@@ -109,7 +110,7 @@
                   repo: context.repo.repo,
                   labels: ['Awaiting author contribution']
               });
-        - name: add-review-label
+        - name: readd-review-label
           if: >
             (steps.check_team_review.outputs.result == 'false')
           uses: actions/github-script@v6
