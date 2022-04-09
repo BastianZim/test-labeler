@@ -15,7 +15,7 @@
         - uses: actions/github-script@v6
           with:
             script: |
-              console.log(context);
+              console.log(context.payload.workflow_run);
 
     remove-review-requested-label:
       name: 'When reviewed, remove review-requested label'
