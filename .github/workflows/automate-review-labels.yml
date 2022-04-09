@@ -75,14 +75,6 @@
                   name: ['Awaiting author contribution']
               })
 
-    log-trigger:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/github-script@v6
-          with:
-            script: |
-              console.log(context);
-
     check-remove-review-requested-label:
       name: 'Check that review-requested label was removed by a team member'
       if: >
@@ -94,10 +86,18 @@
           id: check_team_review
           uses: actions/github-script@v6
           with:
+            debug: true
             script: |
-              console.log(`Label was removed by ${context.actor}`);
-              // TODO: Check team membership of event sender
-              return true;
+              console.log(`Label was removed by ${context.payload.sender.login}`);
+              const membership = github.rest.teams.getMembershipForUserInOrg({
+                  org: 'conda-forge',
+                  team_slug: 'staged-recipes',
+                  username: context.payload.sender.login,
+              });
+              return membership.then((value) => {
+                console.log(value);
+                return true;
+              });
         - name: add-labels
           if: >
             (steps.check_team_review.outputs.result == 'true')
