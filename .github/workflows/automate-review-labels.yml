@@ -1,12 +1,10 @@
-  name: 'Automated review labels (1/2)'
+  name: 'Automated review labels'
 
   on:
     issue_comment:
       types: [created]
-    pull_request_review:
-      types: [submitted]
-    pull_request_review_comment:
-      types: [created]
+    issues:
+      types: [unlabeled]
 
   jobs:
 
@@ -74,3 +72,45 @@
                   repo: context.repo.repo,
                   name: ['Awaiting author contribution']
               })
+
+
+    check-remove-review-requested-label:
+      name: 'Check that review-requested label was removed by team member'
+      if: >
+        github.event.issue
+        && github.event.action == 'unlabeled'
+      runs-on: ubuntu-latest
+      steps:
+        - name: check-team-membership
+          id: check_team_review
+          uses: actions/github-script@v6
+          with:
+            script: |
+              console.log(context);
+              // TODO: Check team membership of event sender
+              return true;
+        - name: add-labels
+          if: >
+            (steps.check_team_review.outputs.result == 'true')
+          uses: actions/github-script@v6
+          with:
+            script: |
+              github.rest.issues.addLabels({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  labels: ['Awaiting author contribution']
+              });
+        - name: add-review-label
+          if: >
+            (steps.check_team_review.outputs.result == 'false')
+          uses: actions/github-script@v6
+          with:
+            script: |
+              github.rest.issues.addLabels({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  labels: ['review-requested']
+              });
+              console.log('Non-members of staged recipes cannot remove this label.')
