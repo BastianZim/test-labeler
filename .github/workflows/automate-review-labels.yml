@@ -76,7 +76,12 @@
               })
 
     log-trigger:
-
+      runs-on: ubuntu-latest
+        steps:
+          - uses: actions/github-script@v6
+            with:
+              script: |
+                console.log(context);
 
     check-remove-review-requested-label:
       name: 'Check that review-requested label was removed by team member'
