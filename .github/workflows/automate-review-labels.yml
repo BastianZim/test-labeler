@@ -77,8 +77,7 @@
     check-remove-review-requested-label:
       name: 'Check that review-requested label was removed by team member'
       if: >
-        github.event.issue
-        && github.event.action == 'unlabeled'
+        github.event.action == 'unlabeled'
       runs-on: ubuntu-latest
       steps:
         - name: check-team-membership
