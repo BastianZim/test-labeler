@@ -11,9 +11,9 @@
 
     remove-review-requested-label:
       name: 'When reviewed, remove review-requested label'
+        # && (github.event.sender.login != github.event.pull_request.user.login)
       if: >
         github.event.pull_request
-        && (github.event.sender.login != github.event.pull_request.user.login)
         && contains(github.event.pull_request.labels.*.name, 'review-requested')
       runs-on: ubuntu-latest
       steps:
