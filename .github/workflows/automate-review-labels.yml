@@ -5,6 +5,8 @@
       types: [created]
     issues:
       types: [unlabeled]
+    pull_request_target:
+      types: [unlabeled]
 
   jobs:
 
@@ -72,6 +74,8 @@
                   repo: context.repo.repo,
                   name: ['Awaiting author contribution']
               })
+
+    log-trigger:
 
 
     check-remove-review-requested-label:
