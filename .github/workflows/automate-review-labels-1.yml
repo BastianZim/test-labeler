@@ -9,6 +9,14 @@
 
   jobs:
 
+    log-payload:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/github-script@v6
+          with:
+            script: |
+              console.log(context);
+
     remove-review-requested-label:
       name: 'When reviewed, remove review-requested label'
         # && (github.event.sender.login != github.event.pull_request.user.login)
