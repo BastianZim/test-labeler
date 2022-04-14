@@ -7,13 +7,16 @@
       types: [unlabeled]
     pull_request_target:
       types: [unlabeled]
+    pull_request_review:
+      types: [submitted]
 
   jobs:
 
     add-review-team-label:
       name: 'When pinged, label a PR with review team'
       if: >
-        github.event.issue
+        github.event.sender.login != 'conda-forge-linter'
+        && github.event.issue
         && github.event.issue.pull_request
         && !contains(github.event.issue.labels.*.name, 'review-requested')
       runs-on: ubuntu-latest
@@ -86,20 +89,22 @@
           id: check_team_review
           uses: actions/github-script@v6
           with:
-            # github-token: ${{ secrets.GH_TOKEN }}
-            debug: true
-              # const membership = github.rest.teams.getMembershipForUserInOrg({
-              #     org: 'conda-forge',
-              #     team_slug: 'staged-recipes',
-              #     username: context.payload.sender.login,
-              # });
-              # return membership.then((result) => {
-              #   console.log(result);
-              #   return result.data.state == 'active';
-              # });
+            github-token: ${{ secrets.GH_TOKEN }}
             script: |
               console.log(`Label was removed by ${context.payload.sender.login}`);
-              return true;
+              const membership = github.rest.teams.getMembershipForUserInOrg({
+                org: 'conda-forge',
+                team_slug: 'staged-recipes',
+                username: context.payload.sender.login,
+              });
+              return membership.then((result) => {
+                if (result.status == 200 && result.data.state == 'active'){
+                return true;
+              } else {
+                console.log(result);
+                return false;
+              }
+              });
         - name: add-labels
           if: >
             (steps.check_team_review.outputs.result == 'true')
@@ -125,3 +130,40 @@
                   labels: ['review-requested']
               });
               console.log('Non-members of staged recipes cannot remove this label.')
+
+    secret-menu:
+      name: 'Check that review from a team member'
+      if: >
+        github.event.action == 'submitted'
+        && contains(github.event.pull_request.labels.*.name, 'review-requested')
+      runs-on: ubuntu-latest
+      steps:
+        - name: check-team-membership
+          id: check_team_review
+          uses: actions/github-script@v6
+          with:
+            script: |
+              console.log(`PR reviewed by ${context.payload.sender.login}`);
+              const reviewers = [
+                'carterbox',
+                'BastianZim',
+              ];
+              for (const reviewer of reviewers) {
+                if (context.payload.sender.login == reviewer){
+                  console.log('This person is a member of staged-recipes');
+                  return true;
+                }
+              }
+              return false;
+        - name: add-labels
+          if: >
+            (steps.check_team_review.outputs.result == 'true')
+          uses: actions/github-script@v6
+          with:
+            script: |
+              github.rest.issues.addLabels({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  labels: ['secret-menu-item']
+              });
